@@ -20,6 +20,6 @@ public class Item {
 		this.id = id;
 		Jedis jedis = new Jedis("localhost");
 		stats = new Double(jedis.get(""+id));
-		this. brand = (String) JPA.em().createNativeQuery("SELECT brand FROM brands WHERE item_id = 12324").getSingleResult();
+		this.brand = (String) JPA.em().createNativeQuery("SELECT brand FROM brands WHERE item_id = :itemID").setParameter("itemID", id).getSingleResult();
 	}
 }
