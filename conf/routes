@@ -2,13 +2,15 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-# Home page
-GET     /                           controllers.Application.index()
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
 
 # Mocks
-GET     /user/*id                     controllers.Mocks.user(id)
-GET     /item/*id                     controllers.Mocks.item(id)
-GET     /picture/*id                     controllers.Mocks.picture(id)
+GET     /user/*id                     controllers.Mock.user(id: Long)
+GET     /item/*id                     controllers.Mock.item(id: Long)
+GET     /picture/*id                     controllers.Mock.picture(id: Long)
+
+
+# Home page
+GET     /*id                           controllers.Application.index(id: Long)
