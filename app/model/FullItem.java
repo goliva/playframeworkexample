@@ -1,26 +1,42 @@
 package model;
 
-import com.typesafe.config.ConfigFactory;
-
-import play.libs.Json;
-import play.libs.ws.WS;
+import play.libs.F.Function;
+import play.libs.F.Promise;
 
 public class FullItem {
 
-	protected static String ITEM_URL = ConfigFactory.load().getString("api.item.url");
-	protected static String USER_URL = ConfigFactory.load().getString("api.user.url");
-	protected static String PICTURE_URL = ConfigFactory.load().getString("api.picture.url");
 	
 	public Item item;
 	public User user;
 	public Picture picture;
 	
-	public static FullItem get(Long itemID) {
-		FullItem response = new FullItem();
-		response.item = Json.fromJson(WS.url(ITEM_URL+itemID).get().get(10000l).asJson(), Item.class);
-		response.picture = Json.fromJson(WS.url(PICTURE_URL+itemID).get().get(10000l).asJson(), Picture.class);
-		response.user = Json.fromJson(WS.url(USER_URL+response.item.user_id).get().get(10000l).asJson(), User.class);
-		return response;
+	public static Promise<FullItem> get(Long itemID) {
+		Promise<Item> itemPromise = Item.get(itemID);
+		return itemPromise.flatMap(
+			new Function<Item,Promise<FullItem>>() {
+				public Promise<FullItem> apply(Item itemResponse) {
+					final FullItem response = new FullItem();
+					response.item =  itemResponse;
+					Promise<Picture> picturePromise = Picture.get(response.item.id);
+					return picturePromise.flatMap(
+						new Function<Picture, Promise<FullItem>>(){
+							public Promise<FullItem> apply(Picture picture) throws Throwable {
+								response.picture = picture;
+								Promise<User> userPromise = User.get(response.item.id);
+								return userPromise.map(
+									new Function<User, FullItem>(){
+										public FullItem apply(User user) throws Throwable {
+											response.user = user;
+											return response;
+										}
+									}
+								);		
+							};
+						}
+					);
+				}
+			}
+		);
 	}
 
 }
