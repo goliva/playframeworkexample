@@ -1,5 +1,8 @@
 package model;
 
+
+import org.jboss.netty.handler.codec.http.HttpHeaders;
+
 import play.cache.Cache;
 import play.libs.F.Function;
 import play.libs.F.Function0;
@@ -33,7 +36,8 @@ public class Picture {
 					new Function<WSResponse, Picture>() {
 						public Picture apply(WSResponse response){
 							Picture picture = Json.fromJson(response.asJson(), Picture.class);
-							Cache.set(item_id+"", picture);
+							Integer timeout = new Integer(response.getHeader("Cache-Control").replaceAll(".*max-age=([0-9]+).*", "$1"));
+							Cache.set(item_id+"", picture, timeout);
 							return picture;
 						}
 					}
