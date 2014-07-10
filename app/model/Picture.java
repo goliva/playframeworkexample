@@ -1,26 +1,44 @@
 package model;
 
-import com.typesafe.config.ConfigFactory;
-
-import play.libs.Json;
+import play.cache.Cache;
 import play.libs.F.Function;
+import play.libs.F.Function0;
 import play.libs.F.Promise;
+import play.libs.Json;
 import play.libs.ws.WS;
 import play.libs.ws.WSResponse;
+
+import com.typesafe.config.ConfigFactory;
 
 public class Picture {
 	public Long id;
 	public String url;
 	protected static String PICTURE_URL = ConfigFactory.load().getString("api.picture.url");
 	
-	public static Promise<Picture> get(Long item_id) {
-		Promise<WSResponse> picturePromise = WS.url(PICTURE_URL+item_id).get();
-		return picturePromise.map(
-				new Function<WSResponse, Picture>() {
-					public Picture apply(WSResponse response){
-						 return Json.fromJson(response.asJson(), Picture.class);
+	public static Promise<Picture> get(final Long item_id) {
+		final Picture cachedPicture = (Picture) Cache.get(item_id+"");
+		if (cachedPicture != null){
+			return Promise.promise(
+				new Function0<Picture>(){
+					@Override
+					public Picture apply() throws Throwable {
+						return cachedPicture;
 					}
+					
 				}
-		);
+			);
+		}else{
+			Promise<WSResponse> picturePromise = WS.url(PICTURE_URL+item_id).get();
+			return picturePromise.map(
+					new Function<WSResponse, Picture>() {
+						public Picture apply(WSResponse response){
+							Picture picture = Json.fromJson(response.asJson(), Picture.class);
+							Cache.set(item_id+"", picture);
+							return picture;
+						}
+					}
+					);
+			
+		}
 	}
 }
