@@ -18,11 +18,11 @@ public class FullItem {
 					final FullItem response = new FullItem();
 					response.item =  itemResponse;
 					Promise<Picture> picturePromise = Picture.get(response.item.id);
+					final Promise<User> userPromise = User.get(response.item.id);
 					return picturePromise.flatMap(
 						new Function<Picture, Promise<FullItem>>(){
 							public Promise<FullItem> apply(Picture picture) throws Throwable {
 								response.picture = picture;
-								Promise<User> userPromise = User.get(response.item.id);
 								return userPromise.map(
 									new Function<User, FullItem>(){
 										public FullItem apply(User user) throws Throwable {
